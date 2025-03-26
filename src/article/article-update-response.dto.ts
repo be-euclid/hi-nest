@@ -1,5 +1,3 @@
-export class ArticleUpdateResponseDto 
-{
-    articleId: number;
+export class ArticleUpdateResponseDto {
     updateCheck: boolean;
 }

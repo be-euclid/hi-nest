@@ -1,4 +1,3 @@
-export class ArticleResponseDto 
-{
-    articleId: number;
+export class ArticleResponseDto {
+  articleID: number;
 }

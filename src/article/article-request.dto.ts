@@ -1,7 +1,6 @@
 import { IsNumber, IsString, IsNotEmpty } from 'class-validator';
 
-export class ArticleRequestDto 
-{ 
+export class ArticleRequestDto { 
     @IsNumber()
     @IsNotEmpty()
     userID: number;

@@ -1,4 +1,3 @@
-export class ArticleDeleteResponseDto 
-{
+export class ArticleDeleteResponseDto {
     deleteCheck: boolean;
 }
