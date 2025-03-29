@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Put, Delete, Body, Query } from '@nestjs/common';
 import { ArticleService } from '../article/article.service';
-import { ArticleRequestDto } from '../article/article-request.dto';
-import { ArticleResponseDto } from '../article/article-response.dto';
-import { ArticleUpdateRequestDto } from '../article/article-update-request.dto';
-import { ArticleUpdateResponseDto } from '../article/article-update-response.dto';
-import { ArticleDeleteRequestDto } from '../article/article-delete-request.dto';
-import { ArticleDeleteResponseDto } from '../article/article-delete-response.dto';
+import { ArticleRequestDto } from '../article/dto/article-request.dto';
+import { ArticleResponseDto } from '../article/dto/article-response.dto';
+import { ArticleUpdateRequestDto } from '../article/dto/article-update-request.dto';
+import { ArticleUpdateResponseDto } from '../article/dto/article-update-response.dto';
+import { ArticleDeleteRequestDto } from '../article/dto/article-delete-request.dto';
+import { ArticleDeleteResponseDto } from '../article/dto/article-delete-response.dto';
 
 @Controller('api/article')
 export class ArticleController 

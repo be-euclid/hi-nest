@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Article } from './article.entity';
-import { ArticleRequestDto } from './article-request.dto';
-import { ArticleUpdateRequestDto } from './article-update-request.dto';
-import { ArticleDeleteRequestDto } from './article-delete-request.dto';
+import { ArticleRequestDto } from './dto/article-request.dto';
+import { ArticleUpdateRequestDto } from './dto/article-update-request.dto';
+import { ArticleDeleteRequestDto } from './dto/article-delete-request.dto';
 
 @Injectable()
 export class ArticleService {
@@ -34,7 +34,7 @@ export class ArticleService {
   deleteArticle(articleDeleteDto: ArticleDeleteRequestDto): { deleteCheck: boolean } {
     const initialLength = this.articles.length;
     this.articles = this.articles.filter(a => a.userID !== articleDeleteDto.userID); // 해당 유저의 게시글 삭제
-    return { deleteCheck: this.articles.length !== initialLength }; // 삭제된 게시글이 있으면 true
+    return { deleteCheck: this.articles.length !== initialLength }; 
   }
 
   // 게시글 조회 (ID로 조회)
@@ -43,12 +43,12 @@ export class ArticleService {
     if (!article) {
       throw new NotFoundException('Article not found');
     }
-    return article; // 찾은 게시글 반환
+    return article; 
   }
 
   // 유저 ID로 게시글 조회
   getArticlesByUserId(userID: number): { articles: Article[] } {
     const articles = this.articles.filter(a => a.userID === userID); // 유저 ID로 게시글 필터링
-    return { articles }; // 필터링된 게시글 목록 반환
+    return { articles }; 
   }
 }
