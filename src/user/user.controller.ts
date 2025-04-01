@@ -1,0 +1,21 @@
+import { Controller, Post, Body } from '@nestjs/common';
+import { UserService } from './user.service';
+import { RegisterUserDto } from './dto/user-register.dto';
+import { LoginUserDto } from './dto/user-login.dto';
+
+@Controller('auth')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  // 회원 가입
+  @Post('register')
+  register(@Body() dto: RegisterUserDto) {
+    return this.userService.register(dto);
+  }
+
+  // 로그인
+  @Post('login')
+  login(@Body() dto: LoginUserDto) {
+    return this.userService.login(dto);
+  }
+}
