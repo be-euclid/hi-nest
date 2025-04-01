@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class ArticleRepository {
@@ -12,14 +12,14 @@ export class ArticleRepository {
     });
   }
 
-  // 특정 게시글 조회 (게시글 ID 기준)
+  // 특정 게시글 조회 (게시글 ID)
   async getArticleById(articleID: number) {
     return this.prisma.article.findUnique({
       where: { id: articleID },
     });
   }
 
-  // 특정 유저의 게시글 조회 (유저 ID 기준)
+  // 특정 유저의 게시글 조회 (유저 ID)
   async getArticlesByUserId(userID: number) {
     return this.prisma.article.findMany({
       where: { userID },
