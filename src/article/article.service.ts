@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ArticleRepository } from './article.repository';
 import { 
   ArticleRequestDto, 
@@ -39,24 +39,23 @@ export class ArticleService {
   }
 
   // 게시글 업데이트
-  async updateArticle(dto: ArticleUpdateRequestDto): Promise<ArticleUpdateResponseDto> {
-    const article = await this.articleRepository.getArticleById(dto.articleID);
-    if (!article) {
-      throw new NotFoundException(`Article with ID ${dto.articleID} not found`);
+  async updateArticle(articleId: number, dto: ArticleUpdateRequestDto, userId: number): Promise<ArticleUpdateResponseDto> {
+    const article = await this.articleRepository.getArticleById(articleId);
+    if (!article || article.userID !== userId) {
+      throw new UnauthorizedException('수정할 권한이 없습니다.');
     }
-
-    await this.articleRepository.updateArticle(dto.articleID, dto.title, dto.content);
+    await this.articleRepository.updateArticle(articleId, dto.title, dto.content);
     return { updateCheck: true };
   }
-
+  
   // 게시글 삭제
-  async deleteArticle(dto: ArticleDeleteRequestDto): Promise<ArticleDeleteResponseDto> {
-    const article = await this.articleRepository.getArticleById(dto.userID);
-    if (!article) {
-      throw new NotFoundException(`Article by User ID ${dto.userID} not found`);
+  async deleteArticle(articleId: number, userId: number): Promise<ArticleDeleteResponseDto> {
+    const article = await this.articleRepository.getArticleById(articleId);
+    if (!article || article.userID !== userId) {
+      throw new UnauthorizedException('삭제할 권한이 없습니다.');
     }
-
-    await this.articleRepository.deleteArticle(dto.userID);
+    await this.articleRepository.deleteArticle(articleId);
     return { deleteCheck: true };
   }
+  
 }
