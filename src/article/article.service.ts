@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { ArticleRepository } from './article.repository';
 import { 
   ArticleRequestDto, 
@@ -41,8 +41,11 @@ export class ArticleService {
   // 게시글 업데이트
   async updateArticle(articleId: number, dto: ArticleUpdateRequestDto, userId: number): Promise<ArticleUpdateResponseDto> {
     const article = await this.articleRepository.getArticleById(articleId);
-    if (!article || article.userID !== userId) {
-      throw new UnauthorizedException('수정할 권한이 없습니다.');
+    if (!article) {
+      throw new NotFoundException('게시글을 찾을 수 없습니다.');
+    }
+    if (article.userID !== userId) {
+      throw new ForbiddenException('수정할 권한이 없습니다.');
     }
     await this.articleRepository.updateArticle(articleId, dto.title, dto.content);
     return { updateCheck: true };
@@ -51,11 +54,13 @@ export class ArticleService {
   // 게시글 삭제
   async deleteArticle(articleId: number, userId: number): Promise<ArticleDeleteResponseDto> {
     const article = await this.articleRepository.getArticleById(articleId);
-    if (!article || article.userID !== userId) {
-      throw new UnauthorizedException('삭제할 권한이 없습니다.');
+    if (!article) {
+      throw new NotFoundException('게시글을 찾을 수 없습니다.');
+    }
+    if (article.userID !== userId) {
+      throw new ForbiddenException('삭제할 권한이 없습니다.');
     }
     await this.articleRepository.deleteArticle(articleId);
     return { deleteCheck: true };
   }
-  
 }
