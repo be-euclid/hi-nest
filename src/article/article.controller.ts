@@ -1,5 +1,8 @@
-import { Controller, Post, Body, Get, Query, Patch, Delete, ParseIntPipe } from '@nestjs/common';
+import { 
+  Controller, Post, Body, Get, Query, Patch, Delete, UseGuards, Request, ParseIntPipe 
+} from '@nestjs/common';
 import { ArticleService } from './article.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { 
   ArticleRequestDto,
   ArticleResponseDto,
@@ -33,13 +36,21 @@ export class ArticleController {
 
   // 게시글 업데이트 API
   @Patch('patch')
-  async updateArticle(@Body() dto: ArticleUpdateRequestDto): Promise<ArticleUpdateResponseDto> {
-    return this.articleService.updateArticle(dto);
+  @UseGuards(JwtAuthGuard)
+  async updateArticle(
+    @Request() req, 
+    @Body() dto: ArticleUpdateRequestDto
+  ): Promise<ArticleUpdateResponseDto> {
+    return this.articleService.updateArticle(dto.articleID, dto, req.user.userID);
   }
 
-  // 게시글 삭제 API
+  // 게시글 삭제 API 
   @Delete('delete')
-  async deleteArticle(@Body() dto: ArticleDeleteRequestDto): Promise<ArticleDeleteResponseDto> {
-    return this.articleService.deleteArticle(dto);
+  @UseGuards(JwtAuthGuard)
+  async deleteArticle(
+    @Request() req,
+    @Body() dto: ArticleDeleteRequestDto
+  ): Promise<ArticleDeleteResponseDto> {
+    return this.articleService.deleteArticle(dto.articleID, req.user.userID);
   }
 }

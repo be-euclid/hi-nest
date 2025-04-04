@@ -9,13 +9,19 @@ export class UserController {
 
   // 회원 가입
   @Post('register')
-  register(@Body() dto: RegisterUserDto) {
+  async register(@Body() dto: RegisterUserDto) {
     return this.userService.register(dto);
   }
 
   // 로그인
   @Post('login')
-  login(@Body() dto: LoginUserDto) {
+  async login(@Body() dto: LoginUserDto) {
     return this.userService.login(dto);
+  }
+
+  // JWT 검증
+  @Post('verify')
+  async verify(@Body('token') token: string) {
+    return this.userService.verifyAccessToken(token);
   }
 }

@@ -1,17 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { RegisterUserDto } from './dto/user-register.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   // 사용자 생성
-  async createUser(dto: RegisterUserDto) {
+  async createUser(username: string, hashedPassword: string) {
     return this.prisma.user.create({
       data: {
-        username: dto.username,
-        password: dto.password, 
+        username,
+        password: hashedPassword,
       },
     });
   }
@@ -20,6 +19,7 @@ export class UserRepository {
   async findUserByUsername(username: string) {
     return this.prisma.user.findUnique({
       where: { username },
+      select: { id: true, username: true, password: true },
     });
   }
 
@@ -27,6 +27,21 @@ export class UserRepository {
   async findUserById(userId: number) {
     return this.prisma.user.findUnique({
       where: { id: userId },
+      select: { id: true, username: true },
+    });
+  }
+
+  async createOAuthUser(data: {
+    username: string;
+    oauthProvider: string;
+    displayName?: string;
+  }) {
+    return this.prisma.user.create({
+      data: {
+        username: data.username,
+        oauthProvider: data.oauthProvider,
+        displayName: data.displayName,
+      },
     });
   }
 }

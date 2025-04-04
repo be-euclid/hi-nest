@@ -28,10 +28,10 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     // 사용자 생성
-    const user = await this.userRepository.createUser({
-      username: dto.username,
-      password: hashedPassword,
-    });
+    const user = await this.userRepository.createUser(
+      dto.username,
+      hashedPassword,
+    );
 
     return { id: user.id, username: user.username };
   }
@@ -54,5 +54,13 @@ export class UserService {
     const token = this.jwtService.sign(payload);
 
     return { accessToken: token };
+  }
+
+  async verifyAccessToken(token: string): Promise<any> {
+    try {
+      return this.jwtService.verify(token);
+    } catch (error) {
+      throw new UnauthorizedException('유효하지 않은 토큰입니다.');
+    }
   }
 }
