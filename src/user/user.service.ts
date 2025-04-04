@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserRepository } from './user.repository';
 import { RegisterUserDto } from './dto/user-register.dto';
 import { LoginUserDto } from './dto/user-login.dto';
@@ -12,17 +16,22 @@ export class UserService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // 회원 가입 
+  // 회원 가입
   async register(dto: RegisterUserDto) {
-    const existingUser = await this.userRepository.findUserByUsername(dto.username);
+    const existingUser = await this.userRepository.findUserByUsername(
+      dto.username,
+    );
     if (existingUser) {
       throw new ConflictException('이미 존재하는 사용자입니다.');
     }
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10); 
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     // 사용자 생성
-    const user = await this.userRepository.createUser(dto.username, hashedPassword);
+    const user = await this.userRepository.createUser(
+      dto.username,
+      hashedPassword,
+    );
 
     return { id: user.id, username: user.username };
   }
@@ -53,5 +62,5 @@ export class UserService {
     } catch (error) {
       throw new UnauthorizedException('유효하지 않은 토큰입니다.');
     }
-  }  
+  }
 }

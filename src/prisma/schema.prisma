@@ -14,12 +14,15 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
-  articles  Article[]
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  password      String?
+  oauthProvider String?
+  displayName   String?
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  articles Article[]
 }
 
 model Article {

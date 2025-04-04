@@ -6,7 +6,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { UserRepository } from './user/user.repository';
 import { UserController } from './user/user.controller';
 import { UserService } from './user/user.service';
-import { JwtStrategy } from './auth/jwt.strategy';
+import { JwtStrategy } from './auth/strategies/jwt.strategy';
 
 @Module({
   imports: [

@@ -30,4 +30,18 @@ export class UserRepository {
       select: { id: true, username: true },
     });
   }
+
+  async createOAuthUser(data: {
+    username: string;
+    oauthProvider: string;
+    displayName?: string;
+  }) {
+    return this.prisma.user.create({
+      data: {
+        username: data.username,
+        oauthProvider: data.oauthProvider,
+        displayName: data.displayName,
+      },
+    });
+  }
 }
