@@ -1,42 +1,42 @@
-import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma/prisma.service';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { UserRepository } from '../user/user.repository';
+import { AxiosError } from 'axios';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly jwtService: JwtService,
-    private readonly prisma: PrismaService,
+    private readonly httpService: HttpService,
+    private readonly userRepository: UserRepository,
   ) {}
 
-  async validateOrCreateOAuthUser(profile: any) {
-    const { provider, id, displayName, emails } = profile;
+  async validateIdpToken(accessToken: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get('https://api.idp.gistory.me/oauth/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }),
+      );
 
-    const email = emails[0].value;
+      const { sub, name, email } = response.data;
 
-    let user = await this.prisma.user.findUnique({
-      where: { username: email },
-    });
+      let user = await this.userRepository.findBySub(sub);
+      if (!user) {
+        user = await this.userRepository.createIdpUser({
+          sub,
+          name,
+          email,
+        });
+      }
 
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          username: email,
-          displayName: displayName,
-          oauthProvider: provider,
-          password: null,
-        },
-      });
+      return user;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status === 401) {
+        throw new UnauthorizedException('Invalid access token');
+      }
+      throw new UnauthorizedException('Failed to verify IDP token');
     }
-
-    return user;
-  }
-
-  async generateJwt(user: any): Promise<string> {
-    const payload = {
-      sub: user.id,
-      username: user.username,
-    };
-    return this.jwtService.sign(payload);
   }
 }

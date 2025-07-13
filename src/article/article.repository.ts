@@ -1,43 +1,41 @@
+// article.repository.ts
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'prisma/prisma.service';
+import { ArticleRequestDto } from './dto/article-request.dto';
 
 @Injectable()
 export class ArticleRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  // 게시글 생성 (DB 저장)
-  async createArticle(userID: number, title: string, content: string) {
+  async createArticle(dto: ArticleRequestDto, userId: string) {
     return this.prisma.article.create({
-      data: { userID, title, content },
+      data: {
+        title: dto.title,
+        content: dto.content,
+        categoryId: dto.categoryId, 
+        userID: userId,
+      },
     });
   }
 
-  // 특정 게시글 조회 (게시글 ID)
-  async getArticleById(articleID: number) {
-    return this.prisma.article.findUnique({
-      where: { id: articleID },
-    });
-  }
-
-  // 특정 유저의 게시글 조회 (유저 ID)
-  async getArticlesByUserId(userID: number) {
+  async getArticlesBySubscribedCategories(userId: string) {
     return this.prisma.article.findMany({
-      where: { userID },
+      where: {
+        category: {
+          subscribers: {
+            some: { userId },
+          },
+        },
+      },
+      include: {
+        category: true,
+      },
     });
   }
 
-  // 게시글 업데이트 (DB 업데이트)
-  async updateArticle(articleID: number, title?: string, content?: string) {
-    return this.prisma.article.update({
-      where: { id: articleID },
-      data: { title, content },
-    });
-  }
-
-  // 게시글 삭제 (DB 삭제)
-  async deleteArticle(userID: number) {
-    return this.prisma.article.deleteMany({
-      where: { userID },
+  async getArticlesByCategory(categoryId: string) {
+    return this.prisma.article.findMany({
+      where: { categoryId: Number(categoryId) }
     });
   }
 }

@@ -1,15 +1,15 @@
-import { IsNumber, IsString, IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
-export class ArticleRequestDto { 
-    @IsNumber()
-    @IsNotEmpty()
-    userID: number;
-    
-    @IsString()
-    @IsNotEmpty()
-    title: string;
-  
-    @IsString()
-    @IsNotEmpty()
-    content: string;
+export class ArticleRequestDto {
+  @IsNotEmpty()
+  @IsString()
+  title: string;
+
+  @IsNotEmpty()
+  @IsString()
+  content: string;
+
+  @IsNotEmpty()
+  @IsUUID()
+  categoryId: number; 
 }

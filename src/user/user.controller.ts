@@ -1,27 +1,32 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Delete, Request, Get, Req, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
-import { RegisterUserDto } from './dto/user-register.dto';
-import { LoginUserDto } from './dto/user-login.dto';
+import { IdpAuthGuard } from '../auth/idp.guard';
+import { SubscriptionService } from './user.service';
+import { CategorySubscribeDto } from './dto/category.dto';
 
-@Controller('auth')
+@Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // 회원 가입
-  @Post('register')
-  async register(@Body() dto: RegisterUserDto) {
-    return this.userService.register(dto);
+  @Get('me')
+  async getProfile(@Req() req: any) {
+    return req.user;
+  }
+}
+
+@Controller('categories')
+export class SubscriptionController {
+  constructor(private readonly subscriptionService: SubscriptionService) {}
+
+  @UseGuards(IdpAuthGuard)
+  @Post('subscribe')
+  async subscribe(@Request() req, @Body() dto: CategorySubscribeDto) {
+    return this.subscriptionService.subscribe(req.user.id, dto.categoryId);
   }
 
-  // 로그인
-  @Post('login')
-  async login(@Body() dto: LoginUserDto) {
-    return this.userService.login(dto);
-  }
-
-  // JWT 검증
-  @Post('verify')
-  async verify(@Body('token') token: string) {
-    return this.userService.verifyAccessToken(token);
+  @UseGuards(IdpAuthGuard)
+  @Delete('unsubscribe')
+  async unsubscribe(@Request() req, @Body() dto: CategorySubscribeDto) {
+    return this.subscriptionService.unsubscribe(req.user.id, dto.categoryId);
   }
 }

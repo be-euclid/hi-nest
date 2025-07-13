@@ -1,46 +1,51 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  // 사용자 생성
-  async createUser(username: string, hashedPassword: string) {
+  async findBySub(sub: string) {
+    return this.prisma.user.findUnique({
+      where: { sub },
+    });
+  }
+
+  async createIdpUser(data: { sub: string; name: string; email: string }) {
     return this.prisma.user.create({
       data: {
-        username,
-        password: hashedPassword,
+        sub: data.sub,
+        name: data.name,
+        email: data.email,
+      },
+    });
+  }
+}
+
+export class SubscriptionRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async subscribeCategory(userId: string, categoryId: number) {
+    return this.prisma.userCategorySubscription.create({
+      data: {
+        userId,
+        categoryId,
       },
     });
   }
 
-  // 사용자 조회 (username)
-  async findUserByUsername(username: string) {
-    return this.prisma.user.findUnique({
-      where: { username },
-      select: { id: true, username: true, password: true },
+  async unsubscribeCategory(userId: string, categoryId: number) {
+    return this.prisma.userCategorySubscription.delete({
+      where: {
+        userId_categoryId: { userId, categoryId },
+      },
     });
   }
 
-  // 사용자 조회 (ID)
-  async findUserById(userId: number) {
-    return this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, username: true },
-    });
-  }
-
-  async createOAuthUser(data: {
-    username: string;
-    oauthProvider: string;
-    displayName?: string;
-  }) {
-    return this.prisma.user.create({
-      data: {
-        username: data.username,
-        oauthProvider: data.oauthProvider,
-        displayName: data.displayName,
+  async isSubscribed(userId: string, categoryId: number) {
+    return this.prisma.userCategorySubscription.findUnique({
+      where: {
+        userId_categoryId: { userId, categoryId },
       },
     });
   }

@@ -1,66 +1,20 @@
-import { Injectable, NotFoundException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ArticleRepository } from './article.repository';
-import { 
-  ArticleRequestDto, 
-  ArticleResponseDto, 
-  ArticleUpdateRequestDto, 
-  ArticleUpdateResponseDto, 
-  ArticleDeleteRequestDto, 
-  ArticleDeleteResponseDto 
-} from './dto';
+import { ArticleRequestDto } from './dto/article-request.dto';
 
 @Injectable()
 export class ArticleService {
-  constructor(private readonly articleRepository: ArticleRepository) {}
+  constructor(private readonly articleRepo: ArticleRepository) {}
 
-  // 게시글 생성
-  async createArticle(dto: ArticleRequestDto): Promise<ArticleResponseDto> {
-    const article = await this.articleRepository.createArticle(dto.userID, dto.title, dto.content);
-    return { articleID: article.id };
+  async create(dto: ArticleRequestDto, userId: string) {
+    return this.articleRepo.createArticle(dto, userId);
   }
 
-  // 게시글 조회 (게시글 ID 기준)
-  async getArticleById(articleID: number): Promise<ArticleResponseDto> {
-    const article = await this.articleRepository.getArticleById(articleID);
-    if (!article) {
-      throw new NotFoundException(`Article with ID ${articleID} not found`);
-    }
-    return { articleID: article.id };
+  async getArticlesBySubscribedCategories(userId: string) {
+    return this.articleRepo.getArticlesBySubscribedCategories(userId);
   }
 
-  // 특정 유저의 게시글 조회
-  async getArticlesByUserId(userID: number): Promise<ArticleResponseDto[]> {
-    const articles = await this.articleRepository.getArticlesByUserId(userID);
-    return articles.map((article) => ({
-      articleID: article.id,
-      title: article.title,
-      content: article.content,
-    }));
-  }
-
-  // 게시글 업데이트
-  async updateArticle(articleId: number, dto: ArticleUpdateRequestDto, userId: number): Promise<ArticleUpdateResponseDto> {
-    const article = await this.articleRepository.getArticleById(articleId);
-    if (!article) {
-      throw new NotFoundException('게시글을 찾을 수 없습니다.');
-    }
-    if (article.userID !== userId) {
-      throw new ForbiddenException('수정할 권한이 없습니다.');
-    }
-    await this.articleRepository.updateArticle(articleId, dto.title, dto.content);
-    return { updateCheck: true };
-  }
-  
-  // 게시글 삭제
-  async deleteArticle(articleId: number, userId: number): Promise<ArticleDeleteResponseDto> {
-    const article = await this.articleRepository.getArticleById(articleId);
-    if (!article) {
-      throw new NotFoundException('게시글을 찾을 수 없습니다.');
-    }
-    if (article.userID !== userId) {
-      throw new ForbiddenException('삭제할 권한이 없습니다.');
-    }
-    await this.articleRepository.deleteArticle(articleId);
-    return { deleteCheck: true };
+  async getArticlesByCategory(categoryId: string) {
+    return this.articleRepo.getArticlesByCategory(categoryId);
   }
 }
