@@ -38,4 +38,16 @@ export class ArticleRepository {
       where: { categoryId: Number(categoryId) }
     });
   }
+  
+  async getSubscribersByCategory(categoryId: number) {
+    return this.prisma.user.findMany({
+      where: {
+        subscriptions: {
+          some: {
+            categoryId: categoryId,
+          },
+        },
+      },
+    });
+  }
 }
