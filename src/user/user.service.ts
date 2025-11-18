@@ -1,68 +1,75 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserRepository } from './user.repository';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
-import { AxiosError } from 'axios';
-import { SubscriptionRepository } from './user.repository'; 
+import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly httpService: HttpService,
+    private readonly prisma: PrismaService,
   ) {}
 
-  async validateIdpToken(accessToken: string) {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get('https://api.idp.gistory.me/oauth/userinfo', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }),
-      );
+  async getUserStatistics(userId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-      const { sub, name, email } = response.data;
+    // 오늘의 예약 통계
+    const todayReservations = await this.prisma.reservation.findMany({
+      where: {
+        userId,
+        date: {
+          gte: today,
+          lt: tomorrow,
+        },
+        status: 'ACTIVE',
+      },
+    });
 
-      let user = await this.userRepository.findBySub(sub);
-      if (!user) {
-        user = await this.userRepository.createIdpUser({
-          sub,
-          name,
-          email,
-        });
-      }
+    const todayHours = todayReservations.reduce((sum, r) => {
+      const hours = (r.endTime.getTime() - r.startTime.getTime()) / (1000 * 60 * 60);
+      return sum + hours;
+    }, 0);
 
-      return user;
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response?.status === 401) {
-        throw new UnauthorizedException('IDP 토큰이 유효하지 않습니다.');
-      }
-      throw new UnauthorizedException('IDP 인증에 실패했습니다.');
-    }
-  }
-}
+    // 전체 예약 수
+    const totalReservations = await this.prisma.reservation.count({
+      where: {
+        userId,
+        status: 'ACTIVE',
+      },
+    });
 
-export class SubscriptionService {
-  constructor(private readonly subscriptionRepository: SubscriptionRepository) {}
+    // 양도 통계 - 내가 양도한 건수
+    const transfersGiven = await this.prisma.market.count({
+      where: {
+        originalUserId: userId,
+      },
+    });
 
-  async subscribe(userId: string, categoryId: number) {
-    const already = await this.subscriptionRepository.isSubscribed(userId, categoryId);
-    if (already) {
-      throw new ConflictException('이미 구독한 카테고리입니다.');
-    }
-    return this.subscriptionRepository.subscribeCategory(userId, categoryId);
-  }
+    // 양도받은 건수 - 두 단계로 조회
+    const myReservationsWithMarket = await this.prisma.reservation.findMany({
+      where: {
+        userId,
+        status: 'ACTIVE',
+      },
+      include: {
+        market: true,
+      },
+    });
 
-  async unsubscribe(userId: string, categoryId: number) {
-    const existing = await this.subscriptionRepository.isSubscribed(userId, categoryId);
-    if (!existing) {
-      throw new NotFoundException('구독 정보가 존재하지 않습니다.');
-    }
-    return this.subscriptionRepository.unsubscribeCategory(userId, categoryId);
+    // market이 있고, 원래 소유자가 나와 다른 경우
+    const transfersReceived = myReservationsWithMarket.filter(
+      r => r.market && !r.market.isAvailable && r.market.originalUserId !== userId
+    ).length;
+
+    return {
+      todayHours,
+      remainingHours: Math.max(0, 4 - todayHours),
+      totalReservations,
+      transfersGiven,
+      transfersReceived,
+    };
   }
 }

@@ -5,48 +5,21 @@ import { PrismaService } from 'prisma/prisma.service';
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findBySub(sub: string) {
+  async findById(id: string) {
     return this.prisma.user.findUnique({
-      where: { sub },
+      where: { id },
     });
   }
 
-  async createIdpUser(data: { sub: string; name: string; email: string }) {
+  async findByStudentId(studentId: string) {
+    return this.prisma.user.findUnique({
+      where: { studentId },
+    });
+  }
+
+  async create(data: { studentId: string; passwordHash: string; name: string }) {
     return this.prisma.user.create({
-      data: {
-        sub: data.sub,
-        name: data.name,
-        email: data.email,
-      },
-    });
-  }
-}
-
-export class SubscriptionRepository {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async subscribeCategory(userId: string, categoryId: number) {
-    return this.prisma.userCategorySubscription.create({
-      data: {
-        userId,
-        categoryId,
-      },
-    });
-  }
-
-  async unsubscribeCategory(userId: string, categoryId: number) {
-    return this.prisma.userCategorySubscription.delete({
-      where: {
-        userId_categoryId: { userId, categoryId },
-      },
-    });
-  }
-
-  async isSubscribed(userId: string, categoryId: number) {
-    return this.prisma.userCategorySubscription.findUnique({
-      where: {
-        userId_categoryId: { userId, categoryId },
-      },
+      data,
     });
   }
 }

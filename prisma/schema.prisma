@@ -1,56 +1,80 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"  // postgresql -> sqlite로 변경
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String                     @id @default(uuid())
-  sub           String                     @unique
+  id            String         @id @default(uuid())
+  studentId     String         @unique // @db.VarChar(8) 제거
+  passwordHash  String
   name          String
-  email         String                     @unique
-  createdAt     DateTime                   @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime                   @default(now()) @updatedAt @db.Timestamptz(6)
-  articles      Article[]
-  subscriptions UserCategorySubscription[]
-
+  createdAt     DateTime       @default(now()) // @db.Timestamptz(6) 제거
+  updatedAt     DateTime       @default(now()) @updatedAt // @db.Timestamptz(6) 제거
+  
+  // Relations
+  reservations  Reservation[]  @relation("UserReservations")
+  transfers     Market[]       @relation("OriginalUser")
+  
   @@map("users")
 }
 
-model Article {
-  id         Int      @id @default(autoincrement())
-  title      String
-  content    String
-  userID     String
-  user       User     @relation(fields: [userID], references: [id], onDelete: Cascade)
-  category   Category @relation(fields: [categoryId], references: [id])
-  categoryId Int
-  createdAt  DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+model Room {
+  id           Int            @id @default(autoincrement())
+  name         String         @unique
+  type         String         // enum 대신 String 사용
+  capacity     Int
+  floor        Int
+  createdAt    DateTime       @default(now()) // @db.Timestamptz(6) 제거
+  updatedAt    DateTime       @default(now()) @updatedAt // @db.Timestamptz(6) 제거
+  
+  // Relations
+  reservations Reservation[]
+  
+  @@map("rooms")
 }
 
-model Category {
-  id          Int                        @id @default(autoincrement())
-  name        String                     @unique
-  articles    Article[]
-  subscribers UserCategorySubscription[]
+model Reservation {
+  id          String      @id @default(uuid())
+  userId      String
+  roomId      Int
+  date        DateTime    // @db.Date 제거
+  startTime   DateTime    // @db.Timestamptz(6) 제거
+  endTime     DateTime    // @db.Timestamptz(6) 제거
+  status      String      @default("ACTIVE") // enum 대신 String, 기본값 문자열로
+  createdAt   DateTime    @default(now()) // @db.Timestamptz(6) 제거
+  updatedAt   DateTime    @default(now()) @updatedAt // @db.Timestamptz(6) 제거
+  
+  // Relations
+  user        User        @relation("UserReservations", fields: [userId], references: [id], onDelete: Cascade)
+  room        Room        @relation(fields: [roomId], references: [id])
+  market      Market?
+  
+  @@index([date, roomId])
+  @@index([userId, date])
+  @@map("reservations")
 }
 
-model UserCategorySubscription {
-  userId     String
-  categoryId Int
-
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@id([userId, categoryId])
+model Market {
+  id              String      @id @default(uuid())
+  reservationId   String      @unique
+  originalUserId  String
+  price           Int         @default(0) // Int?를 Int로 변경
+  description     String?
+  isAvailable     Boolean     @default(true) // SQLite는 Boolean 지원
+  createdAt       DateTime    @default(now()) // @db.Timestamptz(6) 제거
+  updatedAt       DateTime    @default(now()) @updatedAt // @db.Timestamptz(6) 제거
+  
+  // Relations
+  reservation     Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  originalUser    User        @relation("OriginalUser", fields: [originalUserId], references: [id])
+  
+  @@map("market")
 }
+

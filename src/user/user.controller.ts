@@ -1,32 +1,25 @@
-import { Controller, Post, Body, Delete, Request, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request, Patch, Body } from '@nestjs/common';
 import { UserService } from './user.service';
-import { IdpAuthGuard } from '../auth/idp.guard';
-import { SubscriptionService } from './user.service';
-import { CategorySubscribeDto } from './dto/category.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@Controller('user')
+@Controller('api/user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getProfile(@Req() req: any) {
-    return req.user;
-  }
-}
-
-@Controller('categories')
-export class SubscriptionController {
-  constructor(private readonly subscriptionService: SubscriptionService) {}
-
-  @UseGuards(IdpAuthGuard)
-  @Post('subscribe')
-  async subscribe(@Request() req, @Body() dto: CategorySubscribeDto) {
-    return this.subscriptionService.subscribe(req.user.id, dto.categoryId);
+  async getProfile(@Request() req) {
+    return {
+      id: req.user.id,
+      studentId: req.user.studentId,
+      name: req.user.name,
+      createdAt: req.user.createdAt,
+    };
   }
 
-  @UseGuards(IdpAuthGuard)
-  @Delete('unsubscribe')
-  async unsubscribe(@Request() req, @Body() dto: CategorySubscribeDto) {
-    return this.subscriptionService.unsubscribe(req.user.id, dto.categoryId);
+  @UseGuards(JwtAuthGuard)
+  @Get('stats')
+  async getUserStats(@Request() req) {
+    return this.userService.getUserStatistics(req.user.id);
   }
 }

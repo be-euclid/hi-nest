@@ -1,30 +1,30 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { HttpModule } from '@nestjs/axios';
+import { ConfigModule } from '@nestjs/config';
+
 import { PrismaModule } from 'prisma/prisma.module';
-import { PrismaService } from 'prisma/prisma.service';
-import { UserRepository } from './user/user.repository';
-import { UserService, SubscriptionService } from './user/user.service';
-import { UserController, SubscriptionController } from './user/user.controller';
-import { SubscriptionRepository } from './user/user.repository'; 
-import { AuthService } from './auth/auth.service';
-import { IdpAuthGuard } from './auth/idp.guard';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { ReservationModule } from './reservation/reservation.module';
+import { MarketModule } from './market/market.module';
 
 @Module({
   imports: [
-    PrismaModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET || 'your-secret-key',
+      signOptions: { expiresIn: '7d' },
+    }),
     PassportModule,
-    HttpModule,
-  ],
-  controllers: [UserController, SubscriptionController],
-  providers: [
-    PrismaService,
-    UserRepository,
-    UserService,
-    SubscriptionService,
-    SubscriptionRepository,
-    AuthService,
-    IdpAuthGuard,
+    PrismaModule,
+    UserModule,
+    AuthModule,
+    ReservationModule,
+    MarketModule,
   ],
 })
 export class AppModule {}
