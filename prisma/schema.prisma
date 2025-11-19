@@ -65,7 +65,6 @@ model Market {
   id              String      @id @default(uuid())
   reservationId   String      @unique
   originalUserId  String
-  price           Int         @default(0) // Int?를 Int로 변경
   description     String?
   isAvailable     Boolean     @default(true) // SQLite는 Boolean 지원
   createdAt       DateTime    @default(now()) // @db.Timestamptz(6) 제거
